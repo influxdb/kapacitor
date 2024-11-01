@@ -25,8 +25,8 @@ type fakeQueryService struct {
 	mostRecentCtx context.Context
 }
 
-func makeAST(q string) lang.ASTCompiler {
-	pkg, err := runtime.ParseToJSON(q)
+func makeAST(ctx context.Context, q string) lang.ASTCompiler {
+	pkg, err := runtime.ParseToJSON(ctx, q)
 	if err != nil {
 		panic(err)
 	}
