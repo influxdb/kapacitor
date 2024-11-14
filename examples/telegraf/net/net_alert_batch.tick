@@ -20,7 +20,8 @@ var unit = 1s
 
 // Dataframe
 var rawdata = batch
-  |query('''SELECT err_in, err_out, drop_in, drop_out FROM "telegraf"."autogen"."net" ''')
+  // "interface" 'all' has missing some fields - so it must be excluded from results
+  |query('''SELECT err_in, err_out, drop_in, drop_out FROM "telegraf"."autogen"."net" WHERE interface != 'all' ''')
     .period(period)
     .every(every)
     .groupBy('host', 'interface')

@@ -22,6 +22,7 @@ var rawdata = stream
     .database('telegraf')
     .retentionPolicy('autogen')
     .measurement('net')
+    .where(lambda: "interface" != 'all' ) // "interface" 'all' has missing error fields so it must be excluded
     .groupBy('host', 'interface')
 
 var err_in = rawdata
