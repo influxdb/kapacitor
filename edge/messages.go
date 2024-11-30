@@ -681,16 +681,33 @@ func (bb *bufferedBatchMessage) ToRow() (row *models.Row) {
 		return
 	}
 	row.Columns = []string{"time"}
-	p := bb.points[0]
-	for f := range p.Fields() {
+
+	tagNames := make(map[string]struct{})
+	fieldNames := make(map[string]struct{})
+	// we have to walk all the points to get the columns.
+	for _, p := range bb.points {
+		for f := range p.Fields() {
+			fieldNames[f] = struct{}{}
+		}
+
+		// Append tags that are not on the batch
+		for t := range p.Tags() {
+			if _, ok := bb.begin.Tags()[t]; !ok {
+				tagNames[t] = struct{}{}
+			}
+		}
+	}
+	for f := range fieldNames {
 		row.Columns = append(row.Columns, f)
 	}
+
 	// Append tags that are not on the batch
-	for t := range p.Tags() {
+	for t := range tagNames {
 		if _, ok := bb.begin.Tags()[t]; !ok {
 			row.Columns = append(row.Columns, t)
 		}
 	}
+
 	// Sort all columns but leave time as first
 	sort.Strings(row.Columns[1:])
 	row.Values = make([][]interface{}, len(bb.points))
