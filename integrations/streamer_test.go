@@ -10,6 +10,7 @@ import (
 	"html"
 	"io"
 	"math/rand"
+	"mime/quotedprintable"
 	"net/http"
 	"net/http/httptest"
 	"net/mail"
@@ -11011,6 +11012,103 @@ Value: 10
 				}
 			}
 		})
+	}
+}
+
+func TestStream_AlertEmail_HtmlEscape(t *testing.T) {
+	var script = `
+stream
+	|from()
+		.measurement('cpu')
+		.where(lambda: "host" == 'serverA')
+		.groupBy('host')
+	|window()
+		.period(10s)
+		.every(10s)
+	|count('value')
+	|eval(lambda: 'HTML <i arg="1">field</i>')
+		.keep()
+		.as('htmlFieldTest')
+	|eval(lambda: 'HTML <i arg="1">tag</i>')
+		.keep()
+		.as('htmlTagTest')
+		.tags('htmlTagTest')
+	|alert()
+		.id('')
+		.details('
+Field, escaped: {{ index .Fields "htmlFieldTest" }}
+Field, safeHtml: {{ index .Fields "htmlFieldTest" | safeHtml }}
+Tag, escaped: {{ index .Tags "htmlTagTest" }}
+Tag, safeHtml: {{ index .Tags "htmlTagTest" | safeHtml }}
+')
+		.crit(lambda: "count" > 8.0)
+		.email('user1@example.com')
+`
+	expField := "HTML <i arg=\"1\">field</i>"
+	expTag := "HTML <i arg=\"1\">tag</i>"
+	expDetails := fmt.Sprintf(
+		"\nField, escaped: %v\nField, safeHtml: %v\nTag, escaped: %v\nTag, safeHtml: %v\n",
+		html.EscapeString(expField),
+		expField,
+		html.EscapeString(expTag),
+		expTag)
+	var quotedPrintableDetails bytes.Buffer
+	quotedPrintableWriter := quotedprintable.NewWriter(&quotedPrintableDetails)
+	_, _ = quotedPrintableWriter.Write([]byte(expDetails))
+	_ = quotedPrintableWriter.Close()
+
+	expMail := []*smtptest.Message{
+		{
+			Header: mail.Header{
+				"Mime-Version":              []string{"1.0"},
+				"Content-Type":              []string{"text/html; charset=UTF-8"},
+				"Content-Transfer-Encoding": []string{"quoted-printable"},
+			},
+			Body: strings.Replace(quotedPrintableDetails.String(), "\r", "", -1),
+		},
+	}
+
+	smtpServer, err := smtptest.NewServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer smtpServer.Close()
+	sc := smtp.Config{
+		Enabled: true,
+		Host:    smtpServer.Host,
+		Port:    smtpServer.Port,
+		From:    "test@example.com",
+	}
+	smtpService := smtp.NewService(sc, diagService.NewSMTPHandler())
+	if err := smtpService.Open(); err != nil {
+		t.Fatal(err)
+	}
+	defer smtpService.Close()
+
+	tmInit := func(tm *kapacitor.TaskMaster) {
+		tm.SMTPService = smtpService
+	}
+
+	testStreamerNoOutput(t, "TestStream_Alert", script, 13*time.Second, tmInit)
+
+	// Close both client and server to ensure all message are processed
+	smtpService.Close()
+	smtpServer.Close()
+
+	errors := smtpServer.Errors()
+	if got, exp := len(errors), 0; got != exp {
+		t.Errorf("unexpected smtp server errors: %v", errors)
+	}
+
+	msgs := smtpServer.SentMessages()
+	if got, exp := len(msgs), len(expMail); got != exp {
+		t.Errorf("unexpected number of messages sent: got %d exp %d", got, exp)
+	}
+	for i, exp := range expMail {
+		got := msgs[i]
+		if err := exp.Compare(got); err != nil {
+			t.Errorf("%d %s", i, err)
+		}
 	}
 }
 
