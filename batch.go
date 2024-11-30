@@ -358,7 +358,7 @@ func (n *QueryNode) doQuery(in edge.Edge) error {
 				}
 				for _, bch := range batches {
 					// Set stop time based off query bounds
-					if bch.Begin().Time().IsZero() || !n.query.IsGroupedByTime() {
+					if bch.Begin().Time().IsZero() || n.query.IsGroupedByTime() {
 						bch.Begin().SetTime(stop)
 					}
 
