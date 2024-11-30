@@ -811,7 +811,19 @@ func (s *Service) handleDeleteReplay(w http.ResponseWriter, req *http.Request) {
 		httpd.HttpError(w, err.Error(), true, http.StatusBadRequest)
 		return
 	}
-	//TODO: Cancel running replays
+
+	// Cancel running replays
+	replay, err := s.replays.Get(id)
+	if err == nil {
+		tm := s.TaskMasterLookup.Get(replay.ID)
+		if tm != nil {
+			for _, b := range tm.BatchCollectors(replay.TaskID) {
+				b.Close()
+			}
+			tm.StopTasks()
+		}
+	}
+
 	s.replays.Delete(id)
 	w.WriteHeader(http.StatusNoContent)
 }
