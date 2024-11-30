@@ -1,7 +1,7 @@
 Example Calculating Error Percent on Joined series
 ==================================================
 
-See https://influxdb.com/docs/kapacitor/v0.1/use_cases/join_backfill.html
+See https://docs.influxdata.com/kapacitor/latest/guides/join_backfill/
 for a complete guide.
 
 TL;DR
