@@ -270,8 +270,4 @@ require (
 
 replace gopkg.in/fsnotify.v1 => github.com/fsnotify/fsnotify v1.4.2
 
-replace k8s.io/client-go => k8s.io/client-go v0.20.5
-
-replace k8s.io/api => k8s.io/api v0.20.5
-
 replace github.com/dgrijalva/jwt-go => github.com/Waterdrips/jwt-go v3.2.1-0.20200915121943-f6506928b72e+incompatible
