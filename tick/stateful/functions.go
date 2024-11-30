@@ -726,7 +726,7 @@ func (m strSubstring) Call(args ...interface{}) (v interface{}, err error) {
 		return nil, fmt.Errorf("stop index too large for string in strSubstring: %d", stop)
 	}
 
-	v = str[start:stop]
+	v = str[start : stop+1]
 	return
 }
 
