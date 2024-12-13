@@ -18,12 +18,18 @@ type Event struct {
 }
 
 func (e Event) AlertData() Data {
+	// adopt time to local timezone
+	e.State.Time = e.State.Time.Local()
+
+	// transform duration to string for human readability
+	d := e.State.Duration.String()
+
 	return Data{
 		ID:            e.State.ID,
 		Message:       e.State.Message,
 		Details:       e.State.Details,
 		Time:          e.State.Time,
-		Duration:      e.State.Duration,
+		Duration:      d,
 		Level:         e.State.Level,
 		Data:          e.Data.Result,
 		PreviousLevel: e.previousState.Level,
@@ -185,7 +191,8 @@ type Data struct {
 	Message       string        `json:"message"`
 	Details       string        `json:"details"`
 	Time          time.Time     `json:"time"`
-	Duration      time.Duration `json:"duration"`
+	//Duration      time.Duration `json:"duration"`
+	Duration      string        `json:"duration"`
 	Level         Level         `json:"level"`
 	Data          models.Result `json:"data"`
 	PreviousLevel Level         `json:"previousLevel"`

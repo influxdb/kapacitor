@@ -325,6 +325,10 @@ func (pm *pointMessage) ToRow() *models.Row {
 
 	row.Values = make([][]interface{}, 1)
 	row.Values[0] = make([]interface{}, len(row.Columns))
+
+	// adopt time to local timezone, before store it into row
+	pm.time = pm.time.Local()
+
 	row.Values[0][0] = pm.time
 	for i, c := range row.Columns[1:] {
 		if v, ok := pm.fields[c]; ok {
