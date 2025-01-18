@@ -12,6 +12,8 @@ kapacitor*.rpm
 kapacitor*.deb
 kapacitor*.tar
 kapacitor*.zip
+kapacitor*.tar.gz
+kapacitor*.whl
 *.pyc
 *.test
 /test-logs

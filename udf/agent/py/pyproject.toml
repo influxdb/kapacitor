@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "kapacitor_udf"
+version = "1.6.6"
+description = "Kapacitor UDF Agent library"
+authors = ["InfluxDB <support@influxdb.com>"]
+maintainers = ["InfluxDB <support@influxdb.com>"]
+homepage = "github.com/influxdata/kapacitor"
+license = "MIT"
+packages = [
+    { include = "kapacitor" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+protobuf = "3.18.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
